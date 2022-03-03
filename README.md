@@ -11,7 +11,7 @@ Current programs are:
 
 This repo has the pimoroni-pico repo as a submodule.  To set that up do
 
-    git submodule update --init --recurive
+    git submodule update --init --recursive
 
 ## Build
 
