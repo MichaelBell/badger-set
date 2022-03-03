@@ -10,17 +10,20 @@ Current programs are:
 ## Setup
 
 This repo has the pimoroni-pico repo as a submodule.  To set that up do
+
     git submodule update --init --recurive
 
 ## Build
 
 As normal do
+
     mkdir build
     cd build
     cmake ..
 
 It is best not to run make in the top level directory as that will build the whole of the pimoroni-pico repo.
 Instead change to the directory if the individual program you want to run and build it there, eg:
+
     cd badger-image
     make
 
