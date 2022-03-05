@@ -12,7 +12,7 @@
 #define ROSC_MHZ 6
 
 extern "C" {
-void clocks_init()
+void badger_clocks_init()
 {
     // Start tick in watchdog
     watchdog_start_tick(ROSC_MHZ);
@@ -41,13 +41,6 @@ void clocks_init()
       ROSC_MHZ * MHZ,
       ROSC_MHZ * MHZ);
 
-  // Must configure USB clock to allow init to complete.
-  clock_configure(clk_usb,
-      0,
-      CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH,
-      ROSC_MHZ * MHZ,
-      ROSC_MHZ * MHZ);
-
   clock_configure(clk_peri,
       0,
       CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_ROSC_CLKSRC_PH,
@@ -69,17 +62,15 @@ void clocks_init()
   // The PLLs shouldn't be initialized, but this does no harm
   pll_deinit(pll_sys);
   pll_deinit(pll_usb);
+
+  // And disable unused clock regions
+  clocks_hw->wake_en1 = 0x303f;
+  clocks_hw->wake_en0 = 0xf3ef0f3f;
 }
 }
 
 void LowPowerBadger::init()
 {
-  // Can now stop the USB clock
-  clock_stop(clk_usb);
-
-  // And disable unused clock regions
-  clocks_hw->wake_en1 = 0x303f;
-  clocks_hw->wake_en0 = 0xf3ef0f3f;
 
   pimoroni::Badger2040::init();
 }
