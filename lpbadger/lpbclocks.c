@@ -9,12 +9,12 @@
 
 void badger_clocks_init()
 {
-    // Reduce voltage to 1.0V
-    vreg_set_voltage(VREG_VOLTAGE_1_00);
+    // Reduce voltage
+    vreg_set_voltage(VREG_VOLTAGE_0_95);
 
-    // Change ROSC divider to 9 to give a clock around 10MHz 
-    // (guaranteed between 2.13 and 21.3MHz).
-    rosc_hw->div = 0xaa0 + 9;
+    // Change ROSC divider to 8 to give a clock around 10MHz
+    // (guaranteed between 3.6 and 24MHz).
+    rosc_hw->div = 0xaa0 + 8;
 
     // Start tick in watchdog
     watchdog_start_tick(ROSC_MHZ);
