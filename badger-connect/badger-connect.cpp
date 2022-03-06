@@ -238,7 +238,7 @@ int main() {
       board.draw_piece(cur_piece, 100, 54);
       badger.text("wins!", 120, 60);
       badger.update_speed(1);
-      badger.update();
+      badger.update(true);
       break;
     }
 
