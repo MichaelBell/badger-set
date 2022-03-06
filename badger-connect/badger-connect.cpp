@@ -8,8 +8,7 @@
 
 #include "common/pimoroni_common.hpp"
 #include "lpbadger.hpp"
-
-#include "examples/badger2040/badger2040_image_demo_images.hpp"
+#include "images/badger_crop.h"
 
 using std::min;
 using std::max;
@@ -43,6 +42,7 @@ Board board;
 void Board::draw()
 {
   badger.fast_clear();
+  badger.image(badger_crop, 88, 125, 0, 1);
 
   for (int x = getx(0); x <= getx(7); x += piece_size)
   {
@@ -100,7 +100,7 @@ void Board::select_column(Piece piece)
       if (i > 0) --i;
     }
     else if (badger.pressed(badger.C)) {
-      if (i < 7) ++i;
+      if (i < 6) ++i;
     }
     else if (badger.pressed(badger.B)) {
       if (drop_piece(piece, i)) {
@@ -117,6 +117,7 @@ void Board::select_column(Piece piece)
       badger.rectangle(getx(i)+4, gety(7)+4, 8, 2);
       badger.wait_for_idle();
       badger.partial_update(getx(min(i, old_i))+4, gety(7), abs(i - old_i) * 16 + 8, 8, false);
+      badger.wait_for_no_press();
     }
   }
 }

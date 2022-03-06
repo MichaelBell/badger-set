@@ -25,4 +25,4 @@ target_link_libraries(badger-connect
 
 pico_add_extra_outputs(badger-connect)
 
-include_directories(../pimoroni-pico)
+include_directories(../pimoroni-pico ../assets)
