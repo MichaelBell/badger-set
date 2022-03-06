@@ -19,5 +19,6 @@ add_subdirectory(pimoroni-pico)
 
 add_subdirectory(badger-image)
 add_subdirectory(badger-count)
+add_subdirectory(badger-connect)
 
 
