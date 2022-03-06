@@ -24,9 +24,9 @@ class Board {
     };
 
     void draw();
-    void draw_piece(Piece piece, int x, int y);
+    void draw_piece(Piece piece, int x, int y, bool clear = false);
     void select_column(Piece piece);
-    void drop_piece(Piece piece, int i);
+    bool drop_piece(Piece piece, int i);
     Piece check_for_win();
 
   private:
@@ -61,8 +61,14 @@ void Board::draw()
   }
 }
 
-void Board::draw_piece(Piece piece, int x, int y)
+void Board::draw_piece(Piece piece, int x, int y, bool clear)
 {
+  if (clear) {
+    badger.pen(15);
+    badger.rectangle(x+1, y+1, 15, 15);
+    badger.pen(0);
+  }
+
   if (piece == None) return;
 
   if (piece == Cross) {
@@ -99,9 +105,10 @@ void Board::select_column(Piece piece)
       if (i < 7) ++i;
     }
     else if (badger.pressed(badger.B)) {
-      badger.update_speed(2);
-      drop_piece(piece, i);
-      return;
+      if (drop_piece(piece, i)) {
+        badger.update_speed(2);
+        return;
+      }
     }
     else {
       return;
@@ -115,16 +122,19 @@ void Board::select_column(Piece piece)
   }
 }
 
-void Board::drop_piece(Piece piece, int i)
+bool Board::drop_piece(Piece piece, int i)
 {
   for (int j = 6; j >= 0; --j)
   {
     if (board[j][i] == None)
     {
       board[j][i] = piece;
-      return;
+      draw_piece(piece, getx(i), gety(j));
+      return true;
     }
   }
+
+  return false;
 }
 
 Board::Piece Board::check_for_win()
@@ -232,6 +242,8 @@ int main() {
     board.select_column(cur_piece);
 
     if (board.check_for_win() != Board::None) {
+      board.draw_piece(Board::None, 220, 16, true);
+      badger.partial_update(92, 0, 144, 120, true);
       badger.pen(15);
       badger.clear();
       badger.pen(0);
@@ -242,7 +254,6 @@ int main() {
       break;
     }
 
-    badger.led(100);
 
     if (cur_piece == Board::Square) cur_piece = Board::Cross;
     else if (cur_piece == Board::Cross) cur_piece = Board::Square;
@@ -252,8 +263,8 @@ int main() {
       break;
     }
 
-    board.draw();
-    board.draw_piece(cur_piece, 220, 18);
+    badger.led(100);
+    board.draw_piece(cur_piece, 220, 16, true);
     badger.partial_update(92, 0, 144, 120, true);
   }
 
