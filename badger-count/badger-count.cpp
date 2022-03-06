@@ -17,7 +17,7 @@ int main() {
   badger.init();
   badger.led(200);
 
-  uint32_t count = *badger.get_persistent_data();
+  uint8_t count = *badger.get_persistent_data();
   if (badger.pressed_to_wake(badger.A)) {
     ++count;
   }

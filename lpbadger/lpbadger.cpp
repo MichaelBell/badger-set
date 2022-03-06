@@ -7,11 +7,8 @@
 
 #define FLASH_TARGET_OFFSET 0x100000
 
-void LowPowerBadger::store_persistent_data(const uint32_t* data, uint32_t lenInWords)
+void LowPowerBadger::store_persistent_data(const uint8_t* data, int32_t len)
 {
-  // Length in bytes
-  int32_t len = lenInWords * 4;
-
   // Store max of 64KB.
   if (len > 0x10000) len = 0x10000;
 
@@ -35,7 +32,7 @@ void LowPowerBadger::store_persistent_data(const uint32_t* data, uint32_t lenInW
   *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISER_OFFSET)) = interrupt_mask;
 }
 
-const uint32_t* LowPowerBadger::get_persistent_data()
+const uint8_t* LowPowerBadger::get_persistent_data()
 {
-  return (const uint32_t*)(XIP_BASE + FLASH_TARGET_OFFSET);
+  return (const uint8_t*)(XIP_BASE + FLASH_TARGET_OFFSET);
 }
