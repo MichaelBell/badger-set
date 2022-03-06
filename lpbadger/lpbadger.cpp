@@ -61,6 +61,10 @@ void LowPowerBadger::led(uint8_t brightness) {
    pwm_set_gpio_level(LED, v);
 }
 
+void LowPowerBadger::fast_clear(bool white) {
+  memset(frame_buffer, white ? 0x0 : 0xff, sizeof(frame_buffer));
+}
+
 void LowPowerBadger::store_persistent_data(const uint8_t* data, int32_t len)
 {
   // Store max of 64KB.

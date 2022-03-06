@@ -42,9 +42,7 @@ Board board;
 
 void Board::draw()
 {
-  badger.pen(15);
-  badger.clear();
-  badger.pen(0);
+  badger.fast_clear();
 
   for (int x = getx(0); x <= getx(7); x += piece_size)
   {
@@ -245,9 +243,7 @@ int main() {
     if (board.check_for_win() != Board::None) {
       board.draw_piece(Board::None, 220, 16, true);
       badger.partial_update(92, 0, 144, 120, true);
-      badger.pen(15);
-      badger.clear();
-      badger.pen(0);
+      badger.fast_clear();
       board.draw_piece(cur_piece, 100, 54);
       badger.text("wins!", 120, 60);
       badger.update_speed(1);
