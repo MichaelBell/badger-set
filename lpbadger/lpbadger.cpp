@@ -10,39 +10,66 @@
 
 #define FLASH_TARGET_OFFSET 0x100000
 
+class LowPowerBadgerGoSlow
+{
+public:
+  LowPowerBadgerGoSlow()
+  {
+    // Increase the clock divider directly rather than using clock_configure
+    // It doesn't matter that the rest of the system doesn't know the frequency
+    // as we are in a tight loop.
+    //
+    // Disable interrupts while waiting as any interrupts would take
+    // a very long time to execute running at 4kHz!
+    interrupt_mask = *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISER_OFFSET));
+    *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ICER_OFFSET)) = interrupt_mask;
+
+    clocks_hw->clk[clk_sys].div = 2500 << 8;
+  }
+
+  ~LowPowerBadgerGoSlow()
+  {
+    clocks_hw->clk[clk_sys].div = 2 << 8;
+
+    // Enable interrupts
+    *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISER_OFFSET)) = interrupt_mask;
+  }
+
+private:
+  uint32_t interrupt_mask;
+};
+
 void LowPowerBadger::wait_for_idle()
 {
   if (!is_busy()) return;
 
-  // Increase the clock divider directly rather than using clock_configure
-  // It doesn't matter that the rest of the system doesn't know the frequency
-  // as we are in a tight loop.
-  //
-  // Disable interrupts while waiting as any interrupts would take
-  // a very long time to execute running at 4kHz!
-  const uint32_t interrupt_mask = *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISER_OFFSET));
-  *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ICER_OFFSET)) = interrupt_mask;
-
-  clocks_hw->clk[clk_sys].div = 2500 << 8;
+  LowPowerBadgerGoSlow slow;
   while (is_busy());
-  clocks_hw->clk[clk_sys].div = 2 << 8;
-
-  // Enable interrupts
-  *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISER_OFFSET)) = interrupt_mask;
 }
 
 void LowPowerBadger::update(bool blocking)
 {
   if (blocking) wait_for_idle();
+  hw_set_bits(&clocks_hw->clk[clk_peri].ctrl, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
   Badger2040::update(false);
+  hw_clear_bits(&clocks_hw->clk[clk_peri].ctrl, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
   if (blocking) wait_for_idle();
 }
 
 void LowPowerBadger::partial_update(int x, int y, int w, int h, bool blocking) 
 {
   if (blocking) wait_for_idle();
+  hw_set_bits(&clocks_hw->clk[clk_peri].ctrl, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
   Badger2040::partial_update(x, y, w, h, false);
+  hw_clear_bits(&clocks_hw->clk[clk_peri].ctrl, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
   if (blocking) wait_for_idle();
+}
+
+void LowPowerBadger::update_speed(uint8_t speed)
+{
+  hw_set_bits(&clocks_hw->clk[clk_peri].ctrl, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
+  Badger2040::update_speed(speed);
+  hw_clear_bits(&clocks_hw->clk[clk_peri].ctrl, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
 }
 
 void LowPowerBadger::init()
@@ -51,13 +78,36 @@ void LowPowerBadger::init()
 
   // Use a much shorter PWM wrap so that we can still control the brightness
   // at a very low system clock
-  pwm_set_wrap(pwm_gpio_to_slice_num(LED), 64);
+  pwm_set_wrap(pwm_gpio_to_slice_num(LED), 60);
+
+  // Disable PERI CLK
+  hw_clear_bits(&clocks_hw->clk[clk_peri].ctrl, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
+}
+
+void LowPowerBadger::wait_for_press() {
+  update_button_states();
+  if (button_states()) return;
+
+  LowPowerBadgerGoSlow slow;
+  do {
+    update_button_states();
+  } while (button_states() == 0);
+}
+
+void LowPowerBadger::wait_for_no_press() {
+  update_button_states();
+  if (button_states() == 0) return;
+
+  LowPowerBadgerGoSlow slow;
+  do {
+    update_button_states();
+  } while (button_states() != 0);
 }
 
 void LowPowerBadger::led(uint8_t brightness) {
    // set the led brightness from 1 to 256 with gamma correction
    float gamma = 2.8;
-   uint16_t v = (uint16_t)(pow((float)(brightness) / 256.0f, gamma) * 64.0f + 0.5f);
+   uint16_t v = (uint16_t)(pow((float)(brightness) / 256.0f, gamma) * 60.0f + 0.5f);
    pwm_set_gpio_level(LED, v);
 }
 

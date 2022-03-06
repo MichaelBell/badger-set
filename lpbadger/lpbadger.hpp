@@ -10,9 +10,13 @@ class LowPowerBadger : public pimoroni::Badger2040
     // Wait for e-ink disaply to finish updating
     void wait_for_idle();
 
+    void wait_for_press();
+    void wait_for_no_press();
+
     // Override update methods to use our lower power wait
     void update(bool blocking=false);
     void partial_update(int x, int y, int w, int h, bool blocking=false);
+    void update_speed(uint8_t speed);
 
     void led(uint8_t brightness);
     void fast_clear(bool white = true);

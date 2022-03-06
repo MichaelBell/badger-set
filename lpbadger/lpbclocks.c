@@ -2,15 +2,19 @@
 #include "hardware/regs/clocks.h"
 #include "hardware/watchdog.h"
 #include "hardware/pll.h"
+#include "hardware/vreg.h"
 #include "hardware/structs/rosc.h"
 
 #define ROSC_MHZ 10
 
 void badger_clocks_init()
 {
-    // Change ROSC divider to 10 to give a clock around 10MHz 
-    // (guaranteed between 1.92 and 19.2MHz).
-    rosc_hw->div = 0xaa0 + 10;
+    // Reduce voltage to 1.0V
+    vreg_set_voltage(VREG_VOLTAGE_1_00);
+
+    // Change ROSC divider to 9 to give a clock around 10MHz 
+    // (guaranteed between 2.13 and 21.3MHz).
+    rosc_hw->div = 0xaa0 + 9;
 
     // Start tick in watchdog
     watchdog_start_tick(ROSC_MHZ);
