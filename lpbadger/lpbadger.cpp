@@ -7,6 +7,11 @@
 
 #define FLASH_TARGET_OFFSET 0x100000
 
+void LowPowerBadger::wait_for_idle()
+{
+  while (is_busy()) sleep_ms(5);
+}
+
 void LowPowerBadger::store_persistent_data(const uint8_t* data, int32_t len)
 {
   // Store max of 64KB.

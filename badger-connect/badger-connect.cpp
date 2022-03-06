@@ -90,7 +90,7 @@ void Board::select_column(Piece piece)
 
   badger.rectangle(getx(i)+4, gety(7)+4, 8, 2);
   badger.update_speed(3);
-  badger.partial_update(getx(i)+4, gety(7), 8, 8, true);
+  badger.partial_update(getx(i)+4, gety(7), 8, 8, false);
 
   while(true) {
     badger.wait_for_press();
@@ -117,7 +117,8 @@ void Board::select_column(Piece piece)
     if (old_i != i)
     {
       badger.rectangle(getx(i)+4, gety(7)+4, 8, 2);
-      badger.partial_update(getx(min(i, old_i))+4, gety(7), abs(i - old_i) * 16 + 8, 8, true);
+      badger.wait_for_idle();
+      badger.partial_update(getx(min(i, old_i))+4, gety(7), abs(i - old_i) * 16 + 8, 8, false);
     }
   }
 }
