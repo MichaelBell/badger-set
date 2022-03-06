@@ -6,6 +6,7 @@ It also provides a wrapper around flash storage to allow state to be preserved o
 Current programs are:
 * __badger-image__ A modified version of the original Pimoroni badger image example
 * __badger-count__ A counter using the persistent flash storage
+* __badger-connect__ A game of Connect 4
 
 ## Setup
 
@@ -25,5 +26,5 @@ It is best not to run make in the top level directory as that will build the who
 Instead change to the directory if the individual program you want to run and build it there, eg:
 
     cd badger-image
-    make
+    make -j4
 
