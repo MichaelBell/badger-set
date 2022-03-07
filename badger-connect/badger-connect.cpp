@@ -108,6 +108,14 @@ void Board::select_column(Piece piece)
         return;
       }
     }
+    else if (badger.pressed(badger.UP)) {
+      badger.led(100);
+      badger.update_speed(1);
+      badger.rectangle(getx(i)+4, gety(7)+4, 8, 2);
+      badger.update(true);
+      badger.update_speed(3);
+      badger.led(200);
+    }
     else {
       return;
     }
