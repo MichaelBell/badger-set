@@ -8,7 +8,8 @@
 
 #include "common/pimoroni_common.hpp"
 #include "lpbadger.hpp"
-#include "images/badger_crop.h"
+//#include "images/badger_crop.h"
+#include "images/duck_crop.h"
 
 using std::min;
 using std::max;
@@ -42,7 +43,7 @@ Board board;
 void Board::draw()
 {
   badger.fast_clear();
-  badger.image(badger_crop, 88, 125, 0, 1);
+  badger.image(duck_crop, 88, 125, 0, 1);
 
   for (int x = getx(0); x <= getx(7); x += piece_size)
   {
