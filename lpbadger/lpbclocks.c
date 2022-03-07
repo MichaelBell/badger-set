@@ -9,12 +9,25 @@
 
 void badger_clocks_init()
 {
-    // Reduce voltage
+    // Reduce voltage to 0.95 and reduce brownout detection voltage to 
+    // avoid tripping it due to small fluctuations.
+#if 1
+    hw_write_masked(&vreg_and_chip_reset_hw->bod, 0b1000 << VREG_AND_CHIP_RESET_BOD_VSEL_LSB, VREG_AND_CHIP_RESET_BOD_VSEL_BITS);
     vreg_set_voltage(VREG_VOLTAGE_0_95);
 
     // Change ROSC divider to 8 to give a clock around 10MHz
     // (guaranteed between 3.6 and 24MHz).
     rosc_hw->div = 0xaa0 + 8;
+#else
+    // This version reduces voltage to 0.80V
+    // This works for me but is quite a long way below spec!
+    hw_write_masked(&vreg_and_chip_reset_hw->bod, 0b0100 << VREG_AND_CHIP_RESET_BOD_VSEL_LSB, VREG_AND_CHIP_RESET_BOD_VSEL_BITS);
+    hw_write_masked(&vreg_and_chip_reset_hw->vreg, 0b0101 << VREG_AND_CHIP_RESET_VREG_VSEL_LSB, VREG_AND_CHIP_RESET_VREG_VSEL_BITS);
+
+    // Change ROSC divider to 5 to give a clock around 10MHz
+    // (guaranteed between 3.6 and 24MHz).
+    rosc_hw->div = 0xaa0 + 5;
+#endif
 
     // Start tick in watchdog
     watchdog_start_tick(ROSC_MHZ);

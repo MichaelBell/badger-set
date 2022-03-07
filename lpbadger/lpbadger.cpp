@@ -84,6 +84,18 @@ void LowPowerBadger::init()
   hw_clear_bits(&clocks_hw->clk[clk_peri].ctrl, CLOCKS_CLK_PERI_CTRL_ENABLE_BITS);
 }
 
+void LowPowerBadger::halt()
+{
+  uint32_t interrupt_mask = *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ISER_OFFSET));
+  *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ICER_OFFSET)) = interrupt_mask;
+
+  gpio_put(ENABLE_3V3, 0);
+  clocks_hw->clk[clk_sys].div = 2500 << 8;
+
+  // don't allow any more code to execute while power rail drops
+  while(true) {}
+}
+
 void LowPowerBadger::wait_for_press() {
   update_button_states();
   if (button_states()) return;

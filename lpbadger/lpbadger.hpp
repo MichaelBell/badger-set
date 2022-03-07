@@ -6,6 +6,7 @@ class LowPowerBadger : public pimoroni::Badger2040
     LowPowerBadger() : Badger2040(frame_buffer) {}
 
     void init();
+    void halt();
 
     // Wait for e-ink disaply to finish updating
     void wait_for_idle();
