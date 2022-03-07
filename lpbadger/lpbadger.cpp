@@ -96,14 +96,17 @@ void LowPowerBadger::halt()
   while(true) {}
 }
 
-void LowPowerBadger::wait_for_press() {
+bool LowPowerBadger::wait_for_press(int timeout) {
   update_button_states();
-  if (button_states()) return;
+  if (button_states()) return true;
 
   LowPowerBadgerGoSlow slow;
+  int i = timeout * 100;
   do {
     update_button_states();
-  } while (button_states() == 0);
+  } while (button_states() == 0 && (!timeout || --i));
+
+  return button_states() != 0;
 }
 
 void LowPowerBadger::wait_for_no_press() {

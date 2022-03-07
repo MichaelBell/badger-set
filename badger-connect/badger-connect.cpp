@@ -25,9 +25,15 @@ class Board {
 
     void draw();
     void draw_piece(Piece piece, int x, int y, bool clear = false);
-    void select_column(Piece piece);
-    bool drop_piece(Piece piece, int i);
+    void select_column();
+    bool drop_piece(int i);
+    Piece get_cur_piece() { return cur_piece; }
+    void switch_cur_piece();
     Piece check_for_win();
+
+    bool restore_state();
+    void save_state();
+    void clear_state();
 
   private:
     static constexpr int piece_size = 16;
@@ -35,6 +41,7 @@ class Board {
     constexpr int getx(int i) { return xoffset + i * piece_size; }
     constexpr int gety(int j) { return j * piece_size; }
     Piece board[7][7] = {};
+    Piece cur_piece = Square;
 };
 
 LowPowerBadger badger;
@@ -83,7 +90,7 @@ void Board::draw_piece(Piece piece, int x, int y, bool clear)
   }
 }
 
-void Board::select_column(Piece piece)
+void Board::select_column()
 {
   int i = 3;
 
@@ -92,7 +99,12 @@ void Board::select_column(Piece piece)
   badger.partial_update(getx(i)+4, gety(7), 8, 8, false);
 
   while(true) {
-    badger.wait_for_press();
+    if (!badger.wait_for_press(20))
+    {
+      save_state();
+      badger.led(0);
+      badger.halt();
+    } 
     badger.pen(15);
     badger.rectangle(getx(i)+4, gety(7)+4, 8, 2);
     badger.pen(0);
@@ -104,7 +116,7 @@ void Board::select_column(Piece piece)
       if (i < 6) ++i;
     }
     else if (badger.pressed(badger.B)) {
-      if (drop_piece(piece, i)) {
+      if (drop_piece(i)) {
         badger.update_speed(2);
         return;
       }
@@ -131,14 +143,14 @@ void Board::select_column(Piece piece)
   }
 }
 
-bool Board::drop_piece(Piece piece, int i)
+bool Board::drop_piece(int i)
 {
   for (int j = 6; j >= 0; --j)
   {
     if (board[j][i] == None)
     {
-      board[j][i] = piece;
-      draw_piece(piece, getx(i), gety(j));
+      board[j][i] = cur_piece;
+      draw_piece(cur_piece, getx(i), gety(j));
       return true;
     }
   }
@@ -233,37 +245,81 @@ Board::Piece Board::check_for_win()
   return None;
 }
 
+void Board::switch_cur_piece()
+{
+  if (cur_piece == Board::Square) cur_piece = Board::Cross;
+  else if (cur_piece == Board::Cross) cur_piece = Board::Square;
+}
 
+void Board::save_state()
+{
+  uint8_t data[51];
+  memcpy(data, board, 49);
+  data[49] = cur_piece;
+  data[50] = 0xd2;
+
+  badger.store_persistent_data(data, 51);
+}
+
+bool Board::restore_state()
+{
+  const uint8_t* data = badger.get_persistent_data();
+  if (data[50] == 0xd2)
+  {
+    memcpy(board, data, 49);
+    cur_piece = (Piece)data[49];
+    return true;
+  }
+
+  return false;
+}
+
+void Board::clear_state()
+{
+  uint8_t data[51] = {};
+  badger.store_persistent_data(data, 51);
+}
 
 int main() {
   badger.init();
   badger.led(100);
 
-  Board::Piece cur_piece = Board::Square;
+  bool restored = false;
+  if (!badger.pressed_to_wake(badger.UP))
+  {
+    restored = board.restore_state();
+  }
+
   board.draw();
-  board.draw_piece(cur_piece, 220, 18);
-  badger.update(true);
-  badger.update_speed(2);
+  board.draw_piece(board.get_cur_piece(), 220, 18);
+  if (restored)
+  {
+    badger.update_speed(2);
+    badger.update(true);
+  }
+  else
+  {
+    badger.update(true);
+    badger.update_speed(2);
+  }
 
   while (true)
   {
     badger.led(200);
-    board.select_column(cur_piece);
+    board.select_column();
 
     if (board.check_for_win() != Board::None) {
       board.draw_piece(Board::None, 220, 16, true);
       badger.partial_update(92, 0, 144, 120, true);
       badger.fast_clear();
-      board.draw_piece(cur_piece, 100, 54);
+      board.draw_piece(board.get_cur_piece(), 100, 54);
       badger.text("wins!", 120, 60);
       badger.update_speed(1);
       badger.update(true);
       break;
     }
 
-
-    if (cur_piece == Board::Square) cur_piece = Board::Cross;
-    else if (cur_piece == Board::Cross) cur_piece = Board::Square;
+    board.switch_cur_piece();
 
     if (badger.pressed(badger.DOWN))
     {
@@ -271,9 +327,11 @@ int main() {
     }
 
     badger.led(100);
-    board.draw_piece(cur_piece, 220, 16, true);
+    board.draw_piece(board.get_cur_piece(), 220, 16, true);
     badger.partial_update(92, 0, 144, 120, true);
   }
+
+  board.clear_state();
 
   badger.led(0);
 

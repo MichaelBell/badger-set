@@ -11,7 +11,9 @@ class LowPowerBadger : public pimoroni::Badger2040
     // Wait for e-ink disaply to finish updating
     void wait_for_idle();
 
-    void wait_for_press();
+    // Wait and timeout after approximately n seconds, or wait forever if seconds is zero
+    // Returns false on timeout, otherwise true.
+    bool wait_for_press(int seconds = 0);
     void wait_for_no_press();
 
     // Override update methods to use our lower power wait
