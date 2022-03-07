@@ -278,6 +278,9 @@ void Board::clear_state()
 {
   uint8_t data[51] = {};
   badger.store_persistent_data(data, 51);
+
+  memset(board, 0, 49);
+  cur_piece = Square;
 }
 
 int main() {
@@ -285,7 +288,7 @@ int main() {
   badger.led(100);
 
   bool restored = false;
-  if (!badger.pressed_to_wake(badger.UP))
+  if (!badger.pressed_to_wake(badger.DOWN))
   {
     restored = board.restore_state();
   }
@@ -315,7 +318,7 @@ int main() {
       board.draw_piece(board.get_cur_piece(), 100, 54);
       badger.text("wins!", 120, 60);
       badger.update_speed(1);
-      badger.update(true);
+      badger.update();
       break;
     }
 
@@ -323,6 +326,7 @@ int main() {
 
     if (badger.pressed(badger.DOWN))
     {
+      board.clear_state();
       break;
     }
 
@@ -334,6 +338,14 @@ int main() {
   board.clear_state();
 
   badger.led(0);
+
+  if (badger.pressed(badger.DOWN))
+  {
+    board.draw();
+    badger.update_speed(2);
+    badger.update();
+  }
+  badger.wait_for_idle();
 
   badger.halt();
 }
