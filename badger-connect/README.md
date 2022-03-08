@@ -19,5 +19,8 @@ The LED indicates whether power is on - while the screen is drawing and you can'
 
 Power is switched off when someone wins, or after about 20 seconds of no buttons being pressed.
 
-If power is off, switch on by pressing any button.  If you press DOWN then a new game is started, any other button continues the existing game.  
-Note that the active column resets to the centre.
+When power is off and running on battery, switch on by pressing any button.  If you press DOWN then a new game is started, any other button continues the existing game.
+
+When power is off and running from USB, switch on by pressing reset on the back of the badge.
+
+Note that on power on the active column resets to the centre.
