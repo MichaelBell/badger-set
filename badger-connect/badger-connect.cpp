@@ -8,7 +8,7 @@
 
 #include "common/pimoroni_common.hpp"
 #include "lpbadger.hpp"
-//#include "images/badger_crop.h"
+#include "images/badger_crop.h"
 #include "images/duck_crop.h"
 
 using std::min;
@@ -51,6 +51,10 @@ void Board::draw()
 {
   badger.fast_clear();
   badger.image(duck_crop, 88, 125, 0, 1);
+  badger.image(badger_crop, 88, 108, 208, 20);
+
+  draw_piece(cur_piece, 220, 0);
+  badger.text("Turn", 240, 9, 0.75f);
 
   for (int x = getx(0); x <= getx(7); x += piece_size)
   {
@@ -294,7 +298,6 @@ int main() {
   }
 
   board.draw();
-  board.draw_piece(board.get_cur_piece(), 220, 18);
   if (restored)
   {
     badger.update_speed(2);
@@ -312,7 +315,7 @@ int main() {
     board.select_column();
 
     if (board.check_for_win() != Board::None) {
-      board.draw_piece(Board::None, 220, 16, true);
+      board.draw_piece(Board::None, 220, 0, true);
       badger.partial_update(92, 0, 144, 120, true);
       badger.fast_clear();
       board.draw_piece(board.get_cur_piece(), 100, 54);
@@ -331,7 +334,7 @@ int main() {
     }
 
     badger.led(100);
-    board.draw_piece(board.get_cur_piece(), 220, 16, true);
+    board.draw_piece(board.get_cur_piece(), 220, 0, true);
     badger.partial_update(92, 0, 144, 120, true);
   }
 
