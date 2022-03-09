@@ -3,6 +3,7 @@
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 #include "hardware/flash.h"
+#include "hardware/watchdog.h"
 #include <string.h>
 #include <math.h>
 
@@ -90,10 +91,11 @@ void LowPowerBadger::halt()
   *((io_rw_32 *) (PPB_BASE + M0PLUS_NVIC_ICER_OFFSET)) = interrupt_mask;
 
   gpio_put(ENABLE_3V3, 0);
-  clocks_hw->clk[clk_sys].div = 2500 << 8;
 
-  // don't allow any more code to execute while power rail drops
-  while(true) {}
+  // Emulate behaviour of battery powered badge by listening for a button press and then resetting
+  wait_for_no_press();
+  wait_for_press();
+  watchdog_reboot(0, 0, 0);
 }
 
 bool LowPowerBadger::wait_for_press(int timeout) {
