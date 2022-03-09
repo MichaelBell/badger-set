@@ -13,7 +13,7 @@ pico_set_program_version(badger-count "0.1")
 pico_enable_stdio_uart(badger-count 0)
 pico_enable_stdio_usb(badger-count 0)
 
-#set_source_files_properties(badger-count.c PROPERTIES COMPILE_FLAGS -O2)
+lpbadger_set_linker(badger-count)
 
 # Add the standard library to the build
 target_link_libraries(badger-count pico_stdlib)

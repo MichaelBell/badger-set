@@ -4,6 +4,8 @@
 #include "hardware/pll.h"
 #include "hardware/vreg.h"
 #include "hardware/structs/rosc.h"
+#include "hardware/structs/syscfg.h"
+#include "hardware/structs/xip_ctrl.h"
 
 #define ROSC_MHZ 10
 
@@ -78,7 +80,19 @@ void badger_clocks_init()
   pll_deinit(pll_sys);
   pll_deinit(pll_usb);
 
+#ifdef PICO_COPY_TO_RAM
+  // Shutdown unused memory banks
+  syscfg_hw->mempowerdown = 0x58;
+
   // And disable unused clock regions
-  clocks_hw->wake_en1 = 0x303f;
-  clocks_hw->wake_en0 = 0xf3ef0f3f;
+  clocks_hw->wake_en1 = 0x303e;
+  clocks_hw->wake_en0 = 0x73ef0f3f;
+#else
+  // Shutdown unused memory banks
+  syscfg_hw->mempowerdown = 0x5e;
+
+  // And disable unused clock regions
+  clocks_hw->wake_en1 = 0x303e;
+  clocks_hw->wake_en0 = 0x13ef0f3f;
+#endif
 }
