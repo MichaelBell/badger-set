@@ -13,7 +13,10 @@ class LowPowerBadger : public pimoroni::Badger2040
 
     // Wait and timeout after approximately n seconds, or wait forever if seconds is zero
     // Returns false on timeout, otherwise true.
+    // Note that unlike the normal Badger2040 this does not wait for the button to be released
     bool wait_for_press(int seconds = 0);
+
+    // Wait for all buttons to be released
     void wait_for_no_press();
 
     // Override update methods to use our lower power wait
