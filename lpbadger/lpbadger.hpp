@@ -1,3 +1,5 @@
+#pragma once
+
 #include "badger2040.hpp"
 
 class LowPowerBadger : public pimoroni::Badger2040

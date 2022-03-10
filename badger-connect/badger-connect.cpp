@@ -10,48 +10,30 @@
 #include "lpbadger.hpp"
 #include "images/badger_crop.h"
 #include "images/duck_crop.h"
+#include "images/badger_ai.h"
+
+#include "game.hpp"
+#include "ai.hpp"
 
 using std::min;
 using std::max;
 
-class Board {
-  public:
-    
-    enum Piece : uint8_t {
-      None,
-      Cross,
-      Square
-    };
-
-    void draw();
-    void draw_piece(Piece piece, int x, int y, bool clear = false);
-    void select_column();
-    bool drop_piece(int i);
-    Piece get_cur_piece() { return cur_piece; }
-    void switch_cur_piece();
-    Piece check_for_win();
-
-    bool restore_state();
-    void save_state();
-    void clear_state();
-
-  private:
-    static constexpr int piece_size = 16;
-    static constexpr int xoffset = 92;
-    constexpr int getx(int i) { return xoffset + i * piece_size; }
-    constexpr int gety(int j) { return j * piece_size; }
-    Piece board[7][7] = {};
-    Piece cur_piece = Square;
-};
-
 LowPowerBadger badger;
-Board board;
+Game game(badger);
 
-void Board::draw()
+void Game::switch_ai()
+{
+  use_ai = !use_ai;
+}
+
+void Game::draw()
 {
   badger.fast_clear();
   badger.image(duck_crop, 88, 125, 0, 1);
-  badger.image(badger_crop, 88, 108, 208, 20);
+  if (use_ai)
+    badger.image(badger_ai, 88, 108, 208, 20);
+  else
+    badger.image(badger_crop, 88, 108, 208, 20);
 
   draw_piece(cur_piece, 220, 0);
   badger.text("Turn", 240, 9, 0.75f);
@@ -71,7 +53,7 @@ void Board::draw()
   }
 }
 
-void Board::draw_piece(Piece piece, int x, int y, bool clear)
+void Game::draw_piece(Piece piece, int x, int y, bool clear)
 {
   if (clear) {
     badger.pen(15);
@@ -94,9 +76,18 @@ void Board::draw_piece(Piece piece, int x, int y, bool clear)
   }
 }
 
-void Board::select_column()
+void Game::select_column()
 {
   int i = 3;
+
+  if (use_ai && cur_piece == Cross)
+  {
+    do
+    {
+      i = ai_simple_choose_column(get_game_state());
+    } while (drop_piece(i) == -1);
+    return;
+  }
 
   badger.rectangle(getx(i)+4, gety(7)+4, 8, 2);
   badger.update_speed(3);
@@ -120,12 +111,28 @@ void Board::select_column()
       if (i < 6) ++i;
     }
     else if (badger.pressed(badger.B)) {
-      if (drop_piece(i)) {
+      if (drop_piece(i) != -1) {
         badger.update_speed(2);
         return;
       }
     }
     else if (badger.pressed(badger.UP)) {
+      bool started = false;
+      for (int i = 0; i < WIDTH; ++i)
+      {
+        if (board[HEIGHT-1][i] != None)
+        {
+          started = true;
+          break;
+        }
+      }
+
+      if (!started)
+      {
+        switch_ai();
+        draw();
+      }
+
       badger.led(100);
       badger.update_speed(1);
       badger.rectangle(getx(i)+4, gety(7)+4, 8, 2);
@@ -147,22 +154,31 @@ void Board::select_column()
   }
 }
 
-bool Board::drop_piece(int i)
+int GameState::drop_piece(int i)
 {
   for (int j = 6; j >= 0; --j)
   {
     if (board[j][i] == None)
     {
       board[j][i] = cur_piece;
-      draw_piece(cur_piece, getx(i), gety(j));
-      return true;
+      return j;
     }
   }
 
-  return false;
+  return -1;
 }
 
-Board::Piece Board::check_for_win()
+int Game::drop_piece(int i)
+{
+  int j = GameState::drop_piece(i);
+  if (j != -1)
+  {
+    draw_piece(cur_piece, getx(i), gety(j));
+  }
+  return j;
+}
+
+Game::Piece GameState::check_for_win() const
 {
   for (int i = 0; i < 7; ++i)
   {
@@ -249,42 +265,50 @@ Board::Piece Board::check_for_win()
   return None;
 }
 
-void Board::switch_cur_piece()
+void GameState::switch_cur_piece()
 {
-  if (cur_piece == Board::Square) cur_piece = Board::Cross;
-  else if (cur_piece == Board::Cross) cur_piece = Board::Square;
+  if (cur_piece == Game::Square) cur_piece = Game::Cross;
+  else if (cur_piece == Game::Cross) cur_piece = Game::Square;
 }
 
-void Board::save_state()
+GameState GameState::get_state_if_drop(int column, int& row) const
 {
-  uint8_t data[51];
+  GameState new_state(*this);
+  row = new_state.drop_piece(column);
+  new_state.switch_cur_piece();
+  return new_state;
+}
+
+void Game::save_state()
+{
+  uint8_t data[52];
   memcpy(data, board, 49);
   data[49] = cur_piece;
-  data[50] = 0xd2;
+  data[50] = 0xd3;
+  data[51] = use_ai ? 0xff : 0;
 
-  badger.store_persistent_data(data, 51);
+  badger.store_persistent_data(data, 52);
 }
 
-bool Board::restore_state()
+bool Game::restore_state()
 {
   const uint8_t* data = badger.get_persistent_data();
-  if (data[50] == 0xd2)
+  if (data[50] == 0xd3)
   {
     memcpy(board, data, 49);
     cur_piece = (Piece)data[49];
+    use_ai = data[51] != 0;
     return true;
   }
 
   return false;
 }
 
-void Board::clear_state()
+void Game::clear_state()
 {
-  uint8_t data[51] = {};
-  badger.store_persistent_data(data, 51);
-
   memset(board, 0, 49);
   cur_piece = Square;
+  save_state();
 }
 
 int main() {
@@ -294,10 +318,14 @@ int main() {
   bool restored = false;
   if (!badger.pressed_to_wake(badger.DOWN))
   {
-    restored = board.restore_state();
+    restored = game.restore_state();
+  }
+  if (!restored && badger.pressed_to_wake(badger.UP))
+  {
+    game.switch_ai();
   }
 
-  board.draw();
+  game.draw();
   if (restored)
   {
     badger.update_speed(2);
@@ -312,39 +340,39 @@ int main() {
   while (true)
   {
     badger.led(200);
-    board.select_column();
+    game.select_column();
 
-    if (board.check_for_win() != Board::None) {
-      board.draw_piece(Board::None, 220, 0, true);
+    if (game.check_for_win() != Game::None) {
+      game.draw_piece(Game::None, 220, 0, true);
       badger.partial_update(92, 0, 144, 120, true);
       badger.fast_clear();
-      board.draw_piece(board.get_cur_piece(), 100, 54);
+      game.draw_piece(game.get_cur_piece(), 100, 54);
       badger.text("wins!", 120, 60);
       badger.update_speed(1);
       badger.update();
       break;
     }
 
-    board.switch_cur_piece();
+    game.switch_cur_piece();
 
     if (badger.pressed(badger.DOWN))
     {
-      board.clear_state();
+      game.clear_state();
       break;
     }
 
     badger.led(100);
-    board.draw_piece(board.get_cur_piece(), 220, 0, true);
+    game.draw_piece(game.get_cur_piece(), 220, 0, true);
     badger.partial_update(92, 0, 144, 120, true);
   }
 
-  board.clear_state();
+  game.clear_state();
 
   badger.led(0);
 
   if (badger.pressed(badger.DOWN))
   {
-    board.draw();
+    game.draw();
     badger.update_speed(2);
     badger.update();
   }

@@ -5,7 +5,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(badger-connect badger-connect.cpp)
+add_executable(badger-connect badger-connect.cpp ai-simple.cpp)
 
 pico_set_program_name(badger-connect "badger-connect")
 pico_set_program_version(badger-connect "0.1")

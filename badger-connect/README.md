@@ -4,13 +4,16 @@ Connect 4 for the Badger 2040, designed to work from a battery.  A coin cell sho
 
 The pieces are squares and crosses, get 4 of your shape in a line to win.  The current player's turn is indicated by the piece that's drawn to the right of the board.
 
+There is a simple AI (work in progress).  When AI is enabled the Badger gets "2040" written on its nose.
+
 ## Controls
 
 * A: Move to left
 * B: Drop piece in selected column
 * C: Move to right
 
-* UP: Refresh the screen - useful if the badger/duck is looking a bit tired
+* UP - Before game starts: Switch AI opponent on or off.
+* UP - After game starts: Refresh the screen - useful if the badger/duck is looking a bit tired
 * DOWN: Reset the game and power off
 
 ## Power
