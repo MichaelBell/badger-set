@@ -121,6 +121,13 @@ void LowPowerBadger::wait_for_no_press() {
   } while (button_states() != 0);
 }
 
+void LowPowerBadger::sleep_ms(int ms) {
+  LowPowerBadgerGoSlow slow;
+  for (int i = ms / 2; i > 0; --i) {
+    (void) gpio_get_all();
+  }
+}
+
 void LowPowerBadger::led(uint8_t brightness) {
    // set the led brightness from 1 to 256 with gamma correction
    float gamma = 2.8;

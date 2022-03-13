@@ -29,6 +29,10 @@ class LowPowerBadger : public pimoroni::Badger2040
     void led(uint8_t brightness);
     void fast_clear(bool white = true);
 
+    // Very approximate, but low power
+    // Note: No interrupts will be served in this sleep!
+    void sleep_ms(int ms);
+
     void store_persistent_data(const uint8_t* data, int32_t len);
     const uint8_t* get_persistent_data();
 

@@ -40,6 +40,7 @@ class Game : public GameState {
     {}
 
     void switch_ai();
+    bool using_ai() const { return use_ai; }
     void draw();
     void draw_piece(Piece piece, int x, int y, bool clear = false);
     void select_column();

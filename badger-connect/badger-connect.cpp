@@ -82,10 +82,23 @@ void Game::select_column()
 
   if (use_ai && cur_piece == Cross)
   {
+    int debug_value;
     do
     {
-      i = ai_simple_choose_column(get_game_state());
+      i = ai_simple_choose_column(get_game_state(), &debug_value);
     } while (drop_piece(i) == -1);
+
+#if 0
+    badger.pen(15);
+    badger.rectangle(0, 0, 24, 24);
+    badger.pen(0);
+    badger.glyph('0' + (debug_value >> 8), 0, 12);
+    badger.pen(15);
+    badger.rectangle(70, 0, 24, 24);
+    badger.pen(0);
+    badger.glyph('0' + (debug_value & 7), 70, 12);
+#endif
+
     return;
   }
 
@@ -94,7 +107,7 @@ void Game::select_column()
   badger.partial_update(getx(i)+4, gety(7), 8, 8, false);
 
   while(true) {
-    if (!badger.wait_for_press(20))
+    if (!badger.wait_for_press(60))
     {
       save_state();
       badger.led(0);
@@ -345,6 +358,8 @@ int main() {
     if (game.check_for_win() != Game::None) {
       game.draw_piece(Game::None, 220, 0, true);
       badger.partial_update(92, 0, 144, 120, true);
+      if (game.using_ai() && game.get_cur_piece() == Game::Cross) badger.sleep_ms(4000);
+      else badger.sleep_ms(1000);
       badger.fast_clear();
       game.draw_piece(game.get_cur_piece(), 100, 54);
       badger.text("wins!", 120, 60);
@@ -363,7 +378,8 @@ int main() {
 
     badger.led(100);
     game.draw_piece(game.get_cur_piece(), 220, 0, true);
-    badger.partial_update(92, 0, 144, 120, true);
+    //badger.partial_update(92, 0, 144, 120, true);
+    badger.update(true);
   }
 
   game.clear_state();
